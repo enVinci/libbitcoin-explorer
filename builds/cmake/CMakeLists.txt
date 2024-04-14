@@ -267,6 +267,10 @@ link_libraries(
 add_definitions(
     -DSYSCONFDIR=\"${sysconfdir}\" )
 
+if (with-icu)
+    add_definitions( -DWITH_ICU )
+endif()
+
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}

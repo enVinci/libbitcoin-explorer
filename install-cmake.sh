@@ -914,12 +914,12 @@ build_all()
     export CPPFLAGS="$CPPFLAGS ${BOOST_FLAGS[@]}"
     build_from_tarball_boost "$BOOST_ARCHIVE" "$PARALLEL" "$BUILD_BOOST" "${BOOST_OPTIONS[@]}"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin secp256k1 version7 "yes"
+    create_from_github envinci secp256k1 version7 "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${SECP256K1_FLAGS[@]}"
     build_from_github secp256k1 "$PARALLEL" false "yes" "${SECP256K1_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-system version3 "yes"
+    create_from_github envinci libbitcoin-system version3 "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_SYSTEM_FLAGS[@]}"
     build_from_github_cmake libbitcoin-system "$PARALLEL" false "yes" "${BITCOIN_SYSTEM_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
@@ -929,17 +929,17 @@ build_all()
     export CPPFLAGS="$CPPFLAGS ${ZMQ_FLAGS[@]}"
     build_from_tarball "$ZMQ_ARCHIVE" . "$PARALLEL" "$BUILD_ZMQ" "${ZMQ_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-protocol version3 "yes"
+    create_from_github envinci libbitcoin-protocol version3 "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_PROTOCOL_FLAGS[@]}"
     build_from_github_cmake libbitcoin-protocol "$PARALLEL" false "yes" "${BITCOIN_PROTOCOL_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-client version3 "yes"
+    create_from_github envinci libbitcoin-client version3 "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_CLIENT_FLAGS[@]}"
     build_from_github_cmake libbitcoin-client "$PARALLEL" false "yes" "${BITCOIN_CLIENT_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-network version3 "yes"
+    create_from_github envinci libbitcoin-network version3 "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_NETWORK_FLAGS[@]}"
     build_from_github_cmake libbitcoin-network "$PARALLEL" false "yes" "${BITCOIN_NETWORK_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
@@ -947,7 +947,7 @@ build_all()
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_EXPLORER_FLAGS[@]}"
     if [[ ! ($CI == true) ]]; then
-        create_from_github libbitcoin libbitcoin-explorer version3 "yes"
+        create_from_github envinci libbitcoin-explorer version3 "yes"
         build_from_github_cmake libbitcoin-explorer "$PARALLEL" true "yes" "${BITCOIN_EXPLORER_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     else
         push_directory "$PRESUMED_CI_PROJECT_PATH"
