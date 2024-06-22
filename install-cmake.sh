@@ -60,16 +60,22 @@ PRESUMED_CI_PROJECT_PATH=$(pwd)
 # ICU archive.
 #------------------------------------------------------------------------------
 ICU_URL="https://github.com/unicode-org/icu/releases/download/release-55-2/icu4c-55_2-src.tgz"
+ICU_URL_2="https://github.com/enVinci/libbitcoin-explorer/releases/download/v3.8.0/icu4c-55_2-src.tgz"
+ICU_URL_3="https://bitbucket.org/envinci1/libbitcoin-explorer/downloads/icu4c-55_2-src.tgz"
 ICU_ARCHIVE="icu4c-55_2-src.tgz"
 
 # ZMQ archive.
 #------------------------------------------------------------------------------
 ZMQ_URL="https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4.tar.gz"
+ZMQ_URL_2="https://github.com/enVinci/libbitcoin-explorer/releases/download/v3.8.0/zeromq-4.3.4.tar.gz"
+ZMQ_URL_3="https://bitbucket.org/envinci1/libbitcoin-explorer/downloads/zeromq-4.3.4.tar.gz"
 ZMQ_ARCHIVE="zeromq-4.3.4.tar.gz"
 
 # Boost archive.
 #------------------------------------------------------------------------------
 BOOST_URL="http://downloads.sourceforge.net/project/boost/boost/1.73.0/boost_1_73_0.tar.bz2"
+BOOST_URL_2="https://github.com/enVinci/libbitcoin-explorer/releases/download/v3.8.0/boost_1_73_0.tar.bz2"
+BOOST_URL_3="https://bitbucket.org/envinci1/libbitcoin-explorer/downloads/boost_1_73_0.tar.bz2"
 BOOST_ARCHIVE="boost_1_73_0.tar.bz2"
 
 
@@ -148,7 +154,7 @@ make_project_directory()
         make_tests "$JOBS"
     fi
 
-    make install
+    sudo make install
     configure_links
     pop_directory
 }
@@ -524,8 +530,10 @@ extract_from_tarball()
         WGET="wget --verbose"
         TAR="tar --verbose"
     fi
-
-    $WGET --output-document "$ARCHIVE" "$URL"
+    for url in $URL; do
+        $WGET --output-document "$ARCHIVE" "$url" && break
+        [ $? -ne 0 ] && [[ ${url} == ${URL##* } ]] && exit 8
+    done
     $TAR --extract --file "$ARCHIVE" "--$COMPRESSION" --strip-components=1
 
     display_message "Completed download and extraction successfully."
@@ -605,7 +613,7 @@ build_from_tarball()
     else
         configure_options "${CONFIGURATION[@]}"
         make_jobs "$JOBS" --silent
-        make install
+        sudo make install
     fi
 
     configure_links
@@ -622,9 +630,18 @@ clone_from_github()
 {
     local FORK=$1
     local BRANCH=$2
+    declare -A SERVER_URLS=(
+        ["github"]="https://github.com"
+        ["bitbucket"]="https://bitbucket.org"
+        ["gitlab"]="https://gitlab.com"
+    )
 
-    # Clone the repository locally.
-    git clone $GIT_CLONE_PARAMS --branch "$BRANCH" "https://github.com/$FORK"
+    local keys=("${!SERVER_URLS[@]}")
+    for server in "${keys[@]}"; do
+        # Clone the repository locally.
+        git clone $GIT_CLONE_PARAMS --branch "$BRANCH" "${SERVER_URLS[$server]}/$FORK" && break
+        [ $? -ne 0 ] && [[ "${server}" == "${keys[-1]}" ]] && exit 8
+    done
 }
 
 create_from_github()
@@ -725,7 +742,7 @@ cmake_project_directory()
         cmake_tests "$JOBS"
     fi
 
-    make install
+    sudo make install
     configure_links
     pop_directory
 }
@@ -873,7 +890,7 @@ build_from_tarball_boost()
     # github.com/libbitcoin/libbitcoin-system/issues/1192
     # "-sICU_LINK=${ICU_LIBS[*]}"
 
-    ./b2 install \
+    sudo ./b2 install \
         "cxxstd=11" \
         "variant=release" \
         "threading=multi" \
@@ -904,12 +921,12 @@ build_from_tarball_boost()
 #==============================================================================
 build_all()
 {
-    unpack_from_tarball "$ICU_ARCHIVE" "$ICU_URL" gzip "$BUILD_ICU"
+    unpack_from_tarball "$ICU_ARCHIVE" "$ICU_URL $ICU_URL_2 $ICU_URL_3" gzip "$BUILD_ICU"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${ICU_FLAGS[@]}"
     build_from_tarball "$ICU_ARCHIVE" source "$PARALLEL" "$BUILD_ICU" "${ICU_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS
     export CPPFLAGS=$SAVE_CPPFLAGS
-    unpack_from_tarball "$BOOST_ARCHIVE" "$BOOST_URL" bzip2 "$BUILD_BOOST"
+    unpack_from_tarball "$BOOST_ARCHIVE" "$BOOST_URL $BOOST_URL_2 $BOOST_URL_3" bzip2 "$BUILD_BOOST"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BOOST_FLAGS[@]}"
     build_from_tarball_boost "$BOOST_ARCHIVE" "$PARALLEL" "$BUILD_BOOST" "${BOOST_OPTIONS[@]}"
@@ -924,7 +941,7 @@ build_all()
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_SYSTEM_FLAGS[@]}"
     build_from_github_cmake libbitcoin-system "$PARALLEL" false "yes" "${BITCOIN_SYSTEM_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    unpack_from_tarball "$ZMQ_ARCHIVE" "$ZMQ_URL" gzip "$BUILD_ZMQ"
+    unpack_from_tarball "$ZMQ_ARCHIVE" "$ZMQ_URL $ZMQ_URL_2 $ZMQ_URL_3" gzip "$BUILD_ZMQ"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${ZMQ_FLAGS[@]}"
     build_from_tarball "$ZMQ_ARCHIVE" . "$PARALLEL" "$BUILD_ZMQ" "${ZMQ_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS
@@ -949,6 +966,7 @@ build_all()
     if [[ ! ($CI == true) ]]; then
         create_from_github envinci libbitcoin-explorer version3 "yes"
         build_from_github_cmake libbitcoin-explorer "$PARALLEL" true "yes" "${BITCOIN_EXPLORER_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
+        sudo cp libbitcoin-explorer/data/bx /etc/bash_completion.d/
     else
         push_directory "$PRESUMED_CI_PROJECT_PATH"
         push_directory ".."
