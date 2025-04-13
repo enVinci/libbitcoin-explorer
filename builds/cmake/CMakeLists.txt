@@ -9,6 +9,12 @@
 #------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
+# Set the policy for CMP0144 to NEW if the version is 3.27 or higher
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
+    cmake_policy(SET CMP0144 NEW)
+    message(STATUS "CMake policy CMP0144 has been set to NEW.")
+endif()
+
 project(libbitcoin-explorer LANGUAGES C CXX)
 
 enable_testing()
